@@ -197,6 +197,7 @@ class EnvSettingsBase(object):
         load env_class from module config_mod, and extract all
         settings parameters in the globals object.
         """
+        mod = None
         if isinstance(env_class, basestring):
             try:
                 logger.debug("Trying to load %s from %s" %
@@ -204,8 +205,8 @@ class EnvSettingsBase(object):
                 mod = import_module(config_mod)
                 settings_cls = getattr(mod, env_class)
             except BaseException as e:
-                cls.fail('[ERROR] Trying to load %s, Exception was: %s' %
-                         (env_class, e))
+                cls.fail('[ERROR] Trying to load %s (%s), Exception was: %s' %
+                         (env_class, mod, e))
                 if '--traceback' in sys.argv:
                     from traceback import print_exc
                     print_exc()
@@ -251,6 +252,27 @@ class EnvSettingsBase(object):
         return globalsobj['SETTINGS_PATCHES_APPLIED_FUNC']
 
     @classmethod
+    def insert_patch(cls, patch):
+        """
+        attempts to insert patch into the configuration class
+
+        To apply a patch, the configuration class must define the
+        __patches__ class variable as a list of patches. This
+        method attempts to find the configuration class' frame and
+        insert __patches__ f_locals
+        """
+        try:
+            for i in range(5):
+                frame = sys._getframe(i).f_locals
+                if frame.get('__module__') is not None:
+                    break
+        except ValueError:
+            cls.warn('Cannot insert __patches__ for patch', patch)
+        else:
+            frame.setdefault('__patches__', [])
+            frame['__patches__'].append(patch)
+
+    @classmethod
     def patch(cls, func, *args):
         """
         record a patch function to be executed at end of all imports
@@ -292,20 +314,28 @@ class EnvSettingsBase(object):
 
     @classmethod
     def patch_func(cls, func, args):
-        return ('func', func, args, None, None, None)
+        patch = ('func', func, args, None, None, None)
+        cls.insert_patch(patch)
+        return patch
 
     @classmethod
     def patch_keys_func(cls, func, args):
-        return ('keyspatch_func', func, args, None, None, None)
+        patch = ('keyspatch_func', func, args, None, None, None)
+        cls.insert_patch(patch)
+        return patch
 
     @classmethod
     def patch_list(cls, list_name, list_patch, prepend=False,
                    remove=False, at=None):
-        return ('list', list_name, list_patch, prepend, remove, at)
+        patch = ('list', list_name, list_patch, prepend, remove, at)
+        cls.insert_patch(patch)
+        return patch
 
     @classmethod
     def patch_dict(cls, dict_name, dict_patch, remove=False):
-        return ('dict', dict_name, dict_patch, False, remove, None)
+        patch = ('dict', dict_name, dict_patch, False, remove, None)
+        cls.insert_patch(patch)
+        return patch
 
     @classmethod
     def report(cls, globalsobj, keys=None):
