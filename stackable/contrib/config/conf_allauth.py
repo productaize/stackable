@@ -42,6 +42,7 @@ def conditional_accounts(settings, *args, **kwargs):
 
 class Config_DjangoAllAuth(object):
     allauth_apps_append = (
+        'django.contrib.sites',
         'allauth',
         'allauth.account',
         'allauth.socialaccount',
