@@ -15,11 +15,11 @@ def _open(f, *args, **kwargs):
     if isinstance(f, StringIO):
         f.seek(0)
         yield f
+        f.seek(0)
     else:
         f = open(f, *args, **kwargs)
         yield f
         f.close()
-    f.seek(0)
 
 
 def siteenv(site=None, envclass='EnvSettings_Local', api_password=None,
