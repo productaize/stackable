@@ -1,23 +1,37 @@
 import argparse
+from contextlib import contextmanager
 import json
 import os
 from uuid import uuid4
 
+from six import StringIO
 import yaml
 
 from .crypto import AESCipher
 
 
+@contextmanager
+def _open(f, *args, **kwargs):
+    if isinstance(f, StringIO):
+        f.seek(0)
+        yield f
+    else:
+        f = open(f, *args, **kwargs)
+        yield f
+        f.close()
+    f.seek(0)
+
+
 def siteenv(site=None, envclass='EnvSettings_Local', api_password=None,
-            keysfile=None, plain=False, env_var=None):
+            keysfile=None, silent=False, plain=False, env_var=None):
     """
     print the site environment variables for deployment
     """
     site = site or os.path.basename(os.path.dirname(__file__))
     keysfile = keysfile or os.path.expanduser('~/.stackable/keys.yml')
     print "Creating variables for %s from %s" % (site, keysfile)
-    api_password = "%s" % uuid4() or os.environ.get('ENV_APIKEY_DECRYPT')
-    with open(keysfile, 'r') as f:
+    api_password = os.environ.get('ENV_APIKEY_DECRYPT') or "%s" % uuid4()
+    with _open(keysfile, 'r') as f:
         # load cleartext keys and config settings from yml file
         keys = yaml.load(f)
         e_settings = keys.get(envclass, None)
@@ -39,19 +53,23 @@ def siteenv(site=None, envclass='EnvSettings_Local', api_password=None,
         'ENV_APIKEY_DECRYPT=%s' % api_password,
         '%s=%s' % (keyenvvar, ciphertext.replace('\n', '')),
     ]
-    if not plain:
-        # show a little help
-        print "Set the environment for %s as follows:" % site
-        print '---'
-        print "export", " ".join(envvars)
-    else:
-        print "\n".join(envvars)
+    if not silent:
+        if not plain:
+            # show a little help
+            print "Set the environment for %s as follows:" % site
+            print '---'
+            print "export", " ".join(envvars)
+        else:
+            print "\n".join(envvars)
+    return envvars, api_password
 
 parser = argparse.ArgumentParser(description='stackable key encryption')
-parser.add_argument('--keysfile', help='/path/to/keys.yml, defaults to ~/.stackable/keys.yml')
-parser.add_argument('--envclass', help='environment class name, defaults to EnvSettings_Local')
+parser.add_argument(
+    '--keysfile', help='/path/to/keys.yml, defaults to ~/.stackable/keys.yml')
+parser.add_argument(
+    '--envclass', help='environment class name, defaults to EnvSettings_Local')
 
-args = parser.parse_args()
 
 if __name__ == '__main__':
+    args = parser.parse_args()
     siteenv(**vars(args))

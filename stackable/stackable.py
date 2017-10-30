@@ -11,23 +11,26 @@ import os
 import sys
 
 from ordered_set import OrderedSet
-import six
 
 from .crypto import AESCipher
 logger = logging.getLogger(__name__)
 _PATCHES = []
 _CONFIG_MODULES = []
 
-# try to get a password from ENV_APIKEY_DECRYPT
-# if successful create AESCipher instance else leave password blank
-# if password is blank we will not decrypt keys in setup() method
-password = ''
-try:
-    password = os.environ['ENV_APIKEY_DECRYPT']
-except KeyError:
-    pass
-else:
-    aes = AESCipher(password)
+
+def password():
+    # try to get a password from ENV_APIKEY_DECRYPT
+    # if successful create AESCipher instance else leave password blank
+    # if password is blank we will not decrypt keys in setup() method
+    password = ''
+    aes = None
+    try:
+        password = os.environ['ENV_APIKEY_DECRYPT']
+    except KeyError:
+        pass
+    else:
+        aes = AESCipher(password)
+    return password, aes
 
 
 class EnvSettingsBase(object):
@@ -52,6 +55,7 @@ class EnvSettingsBase(object):
     @classmethod
     def setup(cls, globalsobj, env_class=None, config_mod=("config",),
               silent=False, use_lowercase=False):
+        cls.password, cls.aes = password()
         if isinstance(env_class, basestring):
             if '.' in env_class:
                 config_mod = env_class.split('.')[:-1]
@@ -87,7 +91,7 @@ class EnvSettingsBase(object):
             elif patch_type == 'func':
                 cls.patch_do_func(globalsobj, patch_target, patch_input)
         # add api_keys from ./config/
-        if password:
+        if cls.password:
             for ec in env_class:
                 if globalsobj.get('API_KEYS_ENV'):
                     cls.apply_keys_from_env(globalsobj, ec)
@@ -159,7 +163,7 @@ class EnvSettingsBase(object):
             logging.error("Cannot load keys file: %s" % filename)
         else:
             try:
-                cleartext = aes.decrypt(cipherfile.read())
+                cleartext = cls.aes.decrypt(cipherfile.read())
                 keys = json.loads(cleartext)
             except Exception as e:
                 msg = ("Could not decrypt keyfile %s. Did you set "
@@ -179,7 +183,7 @@ class EnvSettingsBase(object):
         keyname = '%s_KEYS' % ec
         cls.info("[INFO] Loading keys for %s from %s" % (ec, keyname))
         try:
-            cleartext = aes.decrypt(os.environ.get(keyname))
+            cleartext = cls.aes.decrypt(os.environ.get(keyname))
             keys = json.loads(cleartext)
         except Exception as e:
             msg = ("Could not read key %s from environment. Did you set"
