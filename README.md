@@ -130,6 +130,19 @@ Set the environment for stackable as follows:
 export DJANGO_CONFIGURATION=EnvSettings_Local DJANGO_CONFIGURATION_TEST=EnvSettings_Local ENV_APIKEY_DECRYPT=ce77e82d-b0a2-4007-9380-d7fddd4bd420 EnvSettings_Local_KEYS=VydQzauHmTnqladba+oU16w=
 ```
 
+To enable encrypted keys in your EnvSettings class:
+
+```
+from stackable.contrib.conf_api import Config_ApiKeys
+
+class EnvSettings_XYZ(Config_ApiKeys, 
+                      ...):
+    pass
+```
+
+`Config_ApiKeys` triggers stackable to read encrypted keys from the environment. 
+See its definition for more details on available options.  
+
 TODO
 * implement a Django command for this
 

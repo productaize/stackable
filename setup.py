@@ -35,6 +35,7 @@ setup(
         'ordered_set',
         'pyaes',
         'six',
+        'dj-database-url==0.4.2',
     ],
     dependency_links=[
     ]

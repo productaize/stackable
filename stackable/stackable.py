@@ -3,6 +3,8 @@ Created on Oct 27, 2013
 
 @author: patrick
 '''
+from __future__ import print_function
+
 from importlib import import_module
 import inspect
 import json
@@ -11,23 +13,27 @@ import os
 import sys
 
 from ordered_set import OrderedSet
-import six
+from six import string_types, iteritems
 
 from .crypto import AESCipher
 logger = logging.getLogger(__name__)
 _PATCHES = []
 _CONFIG_MODULES = []
 
-# try to get a password from ENV_APIKEY_DECRYPT
-# if successful create AESCipher instance else leave password blank
-# if password is blank we will not decrypt keys in setup() method
-password = ''
-try:
-    password = os.environ['ENV_APIKEY_DECRYPT']
-except KeyError:
-    pass
-else:
-    aes = AESCipher(password)
+
+def password():
+    # try to get a password from ENV_APIKEY_DECRYPT
+    # if successful create AESCipher instance else leave password blank
+    # if password is blank we will not decrypt keys in setup() method
+    password = ''
+    aes = None
+    try:
+        password = os.environ['ENV_APIKEY_DECRYPT']
+    except KeyError:
+        pass
+    else:
+        aes = AESCipher(password)
+    return password, aes
 
 
 class EnvSettingsBase(object):
@@ -52,7 +58,8 @@ class EnvSettingsBase(object):
     @classmethod
     def setup(cls, globalsobj, env_class=None, config_mod=("config",),
               silent=False, use_lowercase=False):
-        if isinstance(env_class, basestring):
+        cls.password, cls.aes = password()
+        if isinstance(env_class, string_types):
             if '.' in env_class:
                 config_mod = env_class.split('.')[:-1]
                 env_class = env_class.split('.')[-1]
@@ -87,7 +94,7 @@ class EnvSettingsBase(object):
             elif patch_type == 'func':
                 cls.patch_do_func(globalsobj, patch_target, patch_input)
         # add api_keys from ./config/
-        if password:
+        if cls.password:
             for ec in env_class:
                 if globalsobj.get('API_KEYS_ENV'):
                     cls.apply_keys_from_env(globalsobj, ec)
@@ -112,24 +119,24 @@ class EnvSettingsBase(object):
     def info(cls, text):
         logger.info(text)
         if cls.verbose:
-            print text
+            print(text)
 
     @classmethod
     def warn(cls, text):
         logger.warn(text)
         if cls.verbose:
-            print text
+            print(text)
 
     @classmethod
     def error(cls, text):
         logger.error(text)
         if cls.verbose:
-            print text
+            print(text)
 
     @classmethod
     def fail(cls, text):
         # get the root logger and print the message as this fails with exit(1)
-        print text
+        print(text)
 
     @classmethod
     def apply_keys(cls, globalsobj, keys):
@@ -138,7 +145,7 @@ class EnvSettingsBase(object):
         """
         cls._allow_keys_patch = keys.pop('ALLOW_KEYS_PATCH',
                                          cls._allow_keys_patch)
-        if isinstance(cls._allow_keys_patch, basestring):
+        if isinstance(cls._allow_keys_patch, string_types):
             cls._allow_keys_patch = cls._allow_keys_patch.split(',')
         if isinstance(keys, dict):
             globalsobj.update(keys)
@@ -159,7 +166,7 @@ class EnvSettingsBase(object):
             logging.error("Cannot load keys file: %s" % filename)
         else:
             try:
-                cleartext = aes.decrypt(cipherfile.read())
+                cleartext = cls.aes.decrypt(cipherfile.read())
                 keys = json.loads(cleartext)
             except Exception as e:
                 msg = ("Could not decrypt keyfile %s. Did you set "
@@ -179,7 +186,7 @@ class EnvSettingsBase(object):
         keyname = '%s_KEYS' % ec
         cls.info("[INFO] Loading keys for %s from %s" % (ec, keyname))
         try:
-            cleartext = aes.decrypt(os.environ.get(keyname))
+            cleartext = cls.aes.decrypt(os.environ.get(keyname))
             keys = json.loads(cleartext)
         except Exception as e:
             msg = ("Could not read key %s from environment. Did you set"
@@ -198,7 +205,7 @@ class EnvSettingsBase(object):
         settings parameters in the globals object.
         """
         mod = None
-        if isinstance(env_class, basestring):
+        if isinstance(env_class, string_types):
             try:
                 logger.debug("Trying to load %s from %s" %
                              (env_class, config_mod))
@@ -231,7 +238,7 @@ class EnvSettingsBase(object):
                     globalsobj['SETTINGS_PATCHES_APPLIED'].append(patch)
         dups = cls.check_duplicate_apps(globalsobj)
         if dups:
-            print "[WARNING] Duplicates %s in INSTALLED_APPS" % dups
+            print("[WARNING] Duplicates %s in INSTALLED_APPS" % dups)
 
     @classmethod
     def patches_from_applied_configs(cls, globalsobj):
@@ -341,7 +348,7 @@ class EnvSettingsBase(object):
     def report(cls, globalsobj, keys=None):
         keys = make_tuple(keys)
         print('-- SETTINGS as seen by EnvSettingsBase --\n')
-        for k, v in globalsobj.iteritems():
+        for k, v in iteritems(globalsobj):
             if not keys or k in keys:
                 print("%s=%s\n" % (k, v))
 

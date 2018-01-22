@@ -1,5 +1,16 @@
+from __future__ import print_function
+
 import base64
+
 import pyaes
+from six import text_type, binary_type
+# guarantee unicode string
+_u = lambda t: t.decode(
+    'UTF-8', 'replace') if isinstance(t, binary_type) else t
+_uu = lambda *tt: tuple(_u(t) for t in tt)
+# guarantee byte string in UTF8 encoding
+_u8 = lambda t: t.encode('UTF-8', 'replace') if isinstance(t, text_type) else t
+_uu8 = lambda *tt: tuple(_u8(t) for t in tt)
 
 
 class AESCipher:
@@ -21,19 +32,23 @@ class AESCipher:
             self.key = key[:32]
         else:
             self.key = self._pad(key)
+        self.key = _u8(self.key)
 
     def encrypt(self, plaintext):
+        plaintext = _u8(plaintext)
         cipher = pyaes.AESModeOfOperationCTR(self.key)
         ciphertext = cipher.encrypt(plaintext)
-        return base64.encodestring(ciphertext)
+        return _u(base64.encodestring(ciphertext))
 
     def decrypt(self, ciphertext):
+        ciphertext = _u8(ciphertext)
         cipher = pyaes.AESModeOfOperationCTR(self.key)
         cleartext = cipher.decrypt(base64.decodestring(ciphertext))
-        return cleartext
+        return _u(cleartext)
 
     def _pad(self, s):
-        return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+        delta = self.bs - len(s) % self.bs
+        return s + "{}".format((delta * chr(delta)))
 
     def _unpad(self, s):
         return s[:-ord(s[len(s) - 1:])]
@@ -42,18 +57,18 @@ class AESCipher:
 if __name__ == '__main__':
     # test pure implementation
     from pyaes import AESModeOfOperationCTR as AES
-    aes = AES('This_key_for_demo_purposes_only!')
-    plaintext = 'thequickbrownfoxjumpsoverthelazydog'
+    aes = AES(b'This_key_for_demo_purposes_only!')
+    plaintext = b'thequickbrownfoxjumpsoverthelazydog'
     cipher = aes.encrypt(plaintext)
     # -- we have to reinitialize the AES to decrypt
-    aes = AES('This_key_for_demo_purposes_only!')
+    aes = AES(b'This_key_for_demo_purposes_only!')
     decrypt = aes.decrypt(cipher)
     assert decrypt == plaintext, "expected >%s<==>%s<" % (decrypt, plaintext)
-    print "OK pure mode"
+    print("OK pure mode")
     # test wrapper
     aes = AESCipher('testkey')
     plaintext = 'thequickbrownfoxjumpsoverthelazydog'
     cipher = aes.encrypt(plaintext)
     decrypt = aes.decrypt(cipher)
     assert decrypt == plaintext, "expected >%s<==>%s<" % (decrypt, plaintext)
-    print "OK wrapped mode"
+    print("OK wrapped mode")
