@@ -3,6 +3,8 @@ Created on Oct 27, 2013
 
 @author: patrick
 '''
+from __future__ import print_function
+
 from importlib import import_module
 import inspect
 import json
@@ -11,6 +13,7 @@ import os
 import sys
 
 from ordered_set import OrderedSet
+from six import string_types, iteritems
 
 from .crypto import AESCipher
 logger = logging.getLogger(__name__)
@@ -56,7 +59,7 @@ class EnvSettingsBase(object):
     def setup(cls, globalsobj, env_class=None, config_mod=("config",),
               silent=False, use_lowercase=False):
         cls.password, cls.aes = password()
-        if isinstance(env_class, basestring):
+        if isinstance(env_class, string_types):
             if '.' in env_class:
                 config_mod = env_class.split('.')[:-1]
                 env_class = env_class.split('.')[-1]
@@ -116,24 +119,24 @@ class EnvSettingsBase(object):
     def info(cls, text):
         logger.info(text)
         if cls.verbose:
-            print text
+            print(text)
 
     @classmethod
     def warn(cls, text):
         logger.warn(text)
         if cls.verbose:
-            print text
+            print(text)
 
     @classmethod
     def error(cls, text):
         logger.error(text)
         if cls.verbose:
-            print text
+            print(text)
 
     @classmethod
     def fail(cls, text):
         # get the root logger and print the message as this fails with exit(1)
-        print text
+        print(text)
 
     @classmethod
     def apply_keys(cls, globalsobj, keys):
@@ -142,7 +145,7 @@ class EnvSettingsBase(object):
         """
         cls._allow_keys_patch = keys.pop('ALLOW_KEYS_PATCH',
                                          cls._allow_keys_patch)
-        if isinstance(cls._allow_keys_patch, basestring):
+        if isinstance(cls._allow_keys_patch, string_types):
             cls._allow_keys_patch = cls._allow_keys_patch.split(',')
         if isinstance(keys, dict):
             globalsobj.update(keys)
@@ -202,7 +205,7 @@ class EnvSettingsBase(object):
         settings parameters in the globals object.
         """
         mod = None
-        if isinstance(env_class, basestring):
+        if isinstance(env_class, string_types):
             try:
                 logger.debug("Trying to load %s from %s" %
                              (env_class, config_mod))
@@ -235,7 +238,7 @@ class EnvSettingsBase(object):
                     globalsobj['SETTINGS_PATCHES_APPLIED'].append(patch)
         dups = cls.check_duplicate_apps(globalsobj)
         if dups:
-            print "[WARNING] Duplicates %s in INSTALLED_APPS" % dups
+            print("[WARNING] Duplicates %s in INSTALLED_APPS" % dups)
 
     @classmethod
     def patches_from_applied_configs(cls, globalsobj):
@@ -345,7 +348,7 @@ class EnvSettingsBase(object):
     def report(cls, globalsobj, keys=None):
         keys = make_tuple(keys)
         print('-- SETTINGS as seen by EnvSettingsBase --\n')
-        for k, v in globalsobj.iteritems():
+        for k, v in iteritems(globalsobj):
             if not keys or k in keys:
                 print("%s=%s\n" % (k, v))
 

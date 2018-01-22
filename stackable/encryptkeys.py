@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 from contextlib import contextmanager
 import json
@@ -29,18 +30,18 @@ def siteenv(site=None, envclass='EnvSettings_Local', api_password=None,
     """
     site = site or os.path.basename(os.path.dirname(__file__))
     keysfile = keysfile or os.path.expanduser('~/.stackable/keys.yml')
-    print "Creating variables for %s from %s" % (site, keysfile)
+    print("Creating variables for %s from %s" % (site, keysfile))
     api_password = os.environ.get('ENV_APIKEY_DECRYPT') or "%s" % uuid4()
     with _open(keysfile, 'r') as f:
         # load cleartext keys and config settings from yml file
         keys = yaml.load(f)
         e_settings = keys.get(envclass, None)
         if e_settings is None:
-            print "[WARN] Cannot find any keys for %s" % envclass
+            print("[WARN] Cannot find any keys for %s" % envclass)
             exit()
         if env_var is not None:
             # prints the variable value
-            print "%s=%s" % (env_var, e_settings[env_var])
+            print("{}={}".format(env_var, e_settings[env_var]))
             exit()
         # create encrypted key file per environment
         aes = AESCipher(api_password)
@@ -51,16 +52,16 @@ def siteenv(site=None, envclass='EnvSettings_Local', api_password=None,
         'DJANGO_CONFIGURATION=%s' % envclass,
         'DJANGO_CONFIGURATION_TEST=%s' % envclass,
         'ENV_APIKEY_DECRYPT=%s' % api_password,
-        '%s=%s' % (keyenvvar, ciphertext.replace('\n', '')),
+        '{}={}'.format(keyenvvar, ciphertext.replace('\n', '')),
     ]
     if not silent:
         if not plain:
             # show a little help
-            print "Set the environment for %s as follows:" % site
-            print '---'
-            print "export", " ".join(envvars)
+            print("Set the environment for {} as follows:".format(site))
+            print('---')
+            print("export", " ".join(envvars))
         else:
-            print "\n".join(envvars)
+            print("\n".join(envvars))
     return envvars, api_password
 
 parser = argparse.ArgumentParser(description='stackable key encryption')

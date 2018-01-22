@@ -1,1 +1,1 @@
-from stackable import StackableSettings 
+from .stackable import StackableSettings 
