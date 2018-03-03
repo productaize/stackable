@@ -27,3 +27,5 @@ class Config_DebugToolbar(object):
     DEBUG_TOOLBAR_CONFIG = {
         'INTERCEPT_REDIRECTS': False,
     }
+    # https://stackoverflow.com/a/10518184
+    INTERNAL_IPS = ('127.0.0.1',)

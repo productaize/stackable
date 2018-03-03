@@ -37,10 +37,6 @@ def password():
 
 
 class EnvSettingsBase(object):
-    _patches = _PATCHES
-    _config_modules = _CONFIG_MODULES
-    verbose = False
-    _allow_keys_patch = []  # settings allowed to patch after keys were applied
 
     """
     Setup environment specific settings variables. This will
@@ -55,6 +51,13 @@ class EnvSettingsBase(object):
        ("config_module_name", ...))
     The default config module is "config"
     """
+
+    _patches = _PATCHES
+    _config_modules = _CONFIG_MODULES
+    verbose = False
+    # settings allowed to patch after keys were applied
+    _allow_keys_patch = []
+
     @classmethod
     def setup(cls, globalsobj, env_class=None, config_mod=("config",),
               silent=False, use_lowercase=False):
