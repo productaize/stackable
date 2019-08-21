@@ -7,7 +7,11 @@ class DisableMigrations(object):
     def __getitem__(self, item):
         return "notmigrations"
 
-    def update(self, *args, **kwargs):
+    def update(self, args: object, kwargs: object) -> object:
+        """
+
+        :rtype: 
+        """
         # ignore any updates
         pass
 

@@ -105,3 +105,9 @@ venv.bak/
 .mypy_cache/
 
 # End of https://www.gitignore.io/api/python
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/stackable.iml
+/.idea/workspace.xml
+/.project
+/.pydevproject

@@ -1,6 +1,7 @@
 from stackable.stackable import StackableSettings
 
 
+
 class Config_Bootstrap3(object):
     _addl_apps = (
         'bootstrap3',
