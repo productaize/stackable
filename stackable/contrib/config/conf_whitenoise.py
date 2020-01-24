@@ -2,7 +2,6 @@ import os
 
 from stackable.stackable import StackableSettings
 
-
 class Config_DjangoWhitenoise(object):
 
     """
@@ -17,4 +16,4 @@ class Config_DjangoWhitenoise(object):
         STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.CachedStaticFilesStorage'
 
     _addl_mware = ('whitenoise.middleware.WhiteNoiseMiddleware',)
-    StackableSettings.patch_middleware(_addl_mware)
+    StackableSettings.patch_middleware(_addl_mware, prepend=True)
