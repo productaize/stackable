@@ -2,11 +2,10 @@ import os
 from unittest.case import TestCase
 
 from six import StringIO
-from stackable import stackable
-from stackable.encryptkeys import siteenv
-import yaml
 
+from stackable import stackable
 from stackable.contrib.config.conf_api import Config_ApiKeys
+from stackable.encryptkeys import siteenv
 
 
 class TestConfig(Config_ApiKeys):
@@ -37,7 +36,7 @@ class StackableTests(TestCase):
             var, value = var_value.split('=', 1)
             environ[var] = value
         # attempt instantiating TestConfig, overriding its values
-        # from the secret key 
+        # from the secret key
         globalsobj = {}
         stackable.EnvSettingsBase.setup(globalsobj, env_class='TestConfig',
                                         config_mod='stackable.tests')
