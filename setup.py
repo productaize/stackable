@@ -30,12 +30,10 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     install_requires=[
-        'Django<1.9',
         'PyYAML',
         'ordered_set',
         'pyaes',
         'six',
-        'dj-database-url==0.4.2',
     ],
     dependency_links=[
     ]
