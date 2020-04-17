@@ -1,21 +1,21 @@
-'''
-Created on Oct 27, 2013
-
-@author: patrick
-'''
+"""
+(c) by miraculixx at github, see LICENSE file for details
+"""
 from __future__ import print_function
 
-from importlib import import_module
 import inspect
 import json
 import logging
 import os
 import sys
+import warnings
+from importlib import import_module
 
 from ordered_set import OrderedSet
 from six import string_types, iteritems
 
 from .crypto import AESCipher
+
 logger = logging.getLogger(__name__)
 _PATCHES = []
 _CONFIG_MODULES = []
@@ -37,7 +37,6 @@ def password():
 
 
 class EnvSettingsBase(object):
-
     """
     Setup environment specific settings variables. This will
     get all UPPERCASE class variables from the specified class
@@ -46,8 +45,8 @@ class EnvSettingsBase(object):
     Use in settings.py:
 
     a) EnvSettingsBase.setup(globals(), "MyEnvSettings_classname")
-    b) EnvSettingsBase.setup(globals(), os.environ['DJANGO_CONFIGURATION'])
-    c) EnvSettingsBase.setup(globals(), os.environ['DJANGO_CONFIGURATION'], 
+    b) EnvSettingsBase.setup(globals(), os.environ['APP_CONFIG'])
+    c) EnvSettingsBase.setup(globals(), os.environ['APP_CONFIG'],
        ("config_module_name", ...))
     The default config module is "config"
     """
@@ -59,8 +58,9 @@ class EnvSettingsBase(object):
     _allow_keys_patch = []
 
     @classmethod
-    def setup(cls, globalsobj, env_class=None, config_mod=("config",),
+    def setup(cls, globalsobj, env_class=None, config_mod=None,
               silent=False, use_lowercase=False):
+        config_mod = config_mod or ("config",)
         cls.password, cls.aes = password()
         if isinstance(env_class, string_types):
             if '.' in env_class:
@@ -161,7 +161,7 @@ class EnvSettingsBase(object):
         if not 'API_KEYS_DIR' in globalsobj:
             return
         filename = globalsobj['API_KEYS_DIR'] + \
-            ec + globalsobj['API_KEYS_FILE_EXTENSION']
+                   ec + globalsobj['API_KEYS_FILE_EXTENSION']
         cls.info("[INFO] Loading keys for %s from %s" % (ec, filename))
         try:
             cipherfile = open(filename, 'r')
@@ -183,7 +183,7 @@ class EnvSettingsBase(object):
     @classmethod
     def apply_keys_from_env(cls, globalsobj, ec):
         """
-        read the keys from an environment variable, decrypt it and call 
+        read the keys from an environment variable, decrypt it and call
         apply_keys
         """
         keyname = '%s_KEYS' % ec
@@ -295,10 +295,10 @@ class EnvSettingsBase(object):
     @classmethod
     def patch_keys(cls, func, name, *args):
         """
-        record a keys patch function to be executed after keys 
+        record a keys patch function to be executed after keys
         have been applied. note that the given name must be
         registered in the decrypted keys, otherwise the patch will
-        be refused 
+        be refused
         """
         args = list(args)
         args.insert(0, name)
@@ -382,6 +382,7 @@ class EnvSettingsBase(object):
         add a patch for list_name, applying list_patch. In case of remove,
         all items in list_patch will be removed from list_name
         """
+
         def prepend_or_append(globalsobj, list_name, list_patch):
             # helper function to prepend or append
             # list_patch to globalsobj
@@ -435,9 +436,9 @@ class EnvSettingsBase(object):
         if list_name == 'INSTALLED_APPS':
             # check for duplicates
             if cls.check_duplicate_apps(globalsobj):
-                print ("WARNING: %s is duplicate in INSTALLED_APPS "
-                       " (in patch_apps %s prepend=%s remove=%s at=%s)" %
-                       (list_patch, prepend, remove))
+                print("WARNING: %s is duplicate in INSTALLED_APPS "
+                      " (in patch_apps %s prepend=%s remove=%s at=%s)" %
+                      (list_patch, prepend, remove))
 
     @classmethod
     def patch_do_dict(cls, globalsobj, dict_name, dict_patch, remove=False):
@@ -467,9 +468,111 @@ class EnvSettingsBase(object):
 
 
 class StackableSettings(EnvSettingsBase):
-
     """
-    This is the StackableSettings loader. Use as shown below. 
+    This is the StackableSettings loader for any Python app. Use as shown below.
+
+    Usage:
+        in your app's settings loader include the following snippet
+
+        # refactor all your settings into the config module or package,
+        # then your settings.py contains only these statements:
+        from stackable import StackableSettings
+        StackableSettings.load()
+
+        This will automatically load the stackable configuration class, by
+        default config.EnvSettings_Local, and apply all its settings
+
+    Notes:
+
+        * The stackable configuration can be specified by the APP_CONFIG environment
+          variable. If your command or the module includes the 'test' keyword,
+          the APP_CONFIG_TEST environment variable is used to determine the stackable
+          configuration to load. The defaults are config.EnvSettings_Local and
+          config.EnvSettings_LocalTest, respectively.
+
+        * to override the configuration module use the dot notation to sepcify the class,
+          e.g. APP_CONFIG='myconfig.MyConfiguration'
+
+
+        * By default, API key decryption is automatically applied. To turn it
+          off, override the default stackset.Config_ApiKey class like so:
+
+            class Config_ApiKey(stacksettings.Config_ApiKey):
+                API_KEYS = False
+
+        * If you need more control, use the setup() method, see StackableSettings.setup()
+          for details.
+    """
+    CONFIG_VAR = 'APP_CONFIG'
+    CONFIG_TEST_VAR = 'APP_CONFIG_TEST'
+    ENV_LOCAL = 'EnvSettings_Local'
+    ENV_LOCAL_TEST = 'EnvSettings_LocalTest'
+
+    @classmethod
+    def set_defaults(cls):
+        os.environ.setdefault(cls.CONFIG_VAR, cls.ENV_LOCAL)
+        os.environ.setdefault(cls.CONFIG_TEST_VAR, cls.ENV_LOCAL_TEST)
+
+    @classmethod
+    def parse_options(cls, argv=None):
+        """
+        StackableSettings.parse_options()
+        """
+        argv = argv or sys.argv
+        if '--config' not in sys.argv:
+            cls.set_defaults()
+        else:
+            index = sys.argv.index('--config')
+            os.environ[cls.CONFIG_VAR] = argv[index + 1]
+            os.environ[cls.CONFIG_TEST_VAR] = argv[index + 1]
+            # delete both --config and value
+            del argv[index]
+            del argv[index]
+        if cls.should_debug():
+            EnvSettingsBase.verbose = True
+
+    @classmethod
+    def is_test_run(cls):
+        return any(('test' in argv) for argv in sys.argv)
+
+    @classmethod
+    def should_debug(cls, clean_args=False):
+        in_argv = '--debug-config' in sys.argv
+        in_env = os.environ.get('DEBUG_APP_CONFIG')
+        should = in_argv or in_env
+        if clean_args and in_argv:
+            index = sys.argv.index('--debug-config')
+            del sys.argv[index]
+        return should
+
+    @classmethod
+    def load(cls, globalsobj=None, config_mod=None):
+        """
+        helper method to load from settings.py as simple as StackableSettings.load()
+        """
+        cls.set_defaults()
+        conf_var = cls.CONFIG_TEST_VAR if cls.is_test_run() else cls.CONFIG_VAR
+        envcls = cls.ENV_LOCAL_TEST if cls.is_test_run() else cls.ENV_LOCAL
+        config = os.environ.get(conf_var, envcls)
+        globalsobj = globalsobj or sys._getframe(1).f_globals
+        EnvSettingsBase.setup(globalsobj, env_class=config, config_mod=config_mod)
+
+    @classmethod
+    def root_path(cls, filename=None):
+        """
+        this returns the parent directory of the top-level module of the
+        configuration class, which is assumed to be in the actual root
+        of the project
+        """
+        if filename is None:
+            filename = sys._getframe(1).f_globals.get('__file__')
+        cur_dir = os.path.dirname(filename)
+        return os.path.abspath(os.path.join(cur_dir, os.pardir))
+
+
+class DjangoStackableSettings(StackableSettings):
+    """
+    This is the StackableSettings loader for Django. Use as shown below.
 
     Usage:
        manage.py:
@@ -496,20 +599,26 @@ class StackableSettings(EnvSettingsBase):
            os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
            application = StackableSettings.get_wsgi_application()
 
-        This will load the following configuration class from the 
+        This will load the following configuration class from the
         config module:
 
         1. as given by the --config option
-        2. as set by the DJANGO_CONFIGURATION environment variable
-        3. as set by the DJANGO_CONFIGURATION_TEST environment variable
+        2. as set by the APP_CONFIG environment variable
+        3. as set by the APP_CONFIG_TEST environment variable
            if 'manage.py test' is called
 
-    To debug, call 
+        Note:
+
+        * for backwards compability, if APP_CONFIG nor APP_CONFIG_TEST
+          is defined, the alternative DJANGO_CONFIGURATION and DJANGO_CONFIGURATION_TEST
+          is applied.
+
+    To debug, call
 
         manage.py --debug-config  print_settings | \
            grep -E "\[INFO|WARN|ERROR\]|ERROR|SETTINGS.*APPLIED"
 
-    This will print all the configuration classes that were loaded, in 
+    This will print all the configuration classes that were loaded, in
     loading order, and all the patches that were applied, in the order applied.
 
     To load a specific configuration class from the command line, run e.g.
@@ -517,82 +626,41 @@ class StackableSettings(EnvSettingsBase):
         manage.py --config Env_Developer
 
     This will load config.Env_Developer. You may specify the specific module
-    to use by giving a full path, i.e. --config foo.Env_Developer  
+    to use by giving a full path, i.e. --config foo.Env_Developer
 
     To print the effective settings after all configurations were applied,
     run the usual Django command:
 
         manage.py print_settings
-
-    By default, API key decryption is automatically applied. To turn it
-    off, override the default stackset.Config_ApiKey class like so:
-
-    class Config_ApiKey(stacksettings.Config_ApiKey):
-        API_KEYS = False
-
-    If you need more control, use the setup() method, see
-    EnvSettingsBase.setup() for details.
     """
-    @classmethod
-    def set_defaults(cls):
-        os.environ.setdefault('DJANGO_CONFIGURATION', 'EnvSettings_Local')
-        os.environ.setdefault(
-            'DJANGO_CONFIGURATION_TEST', 'EnvSettings_LocalTest')
-
-    @classmethod
-    def parse_options(cls, argv=None):
-        """
-        StackableSettings.parse_options()
-        """
-        argv = argv or sys.argv
-        if '--config' not in sys.argv:
-            cls.set_defaults()
-        else:
-            index = sys.argv.index('--config')
-            os.environ['DJANGO_CONFIGURATION'] = argv[index + 1]
-            os.environ['DJANGO_CONFIGURATION_TEST'] = argv[index + 1]
-            # delete both --config and value
-            del argv[index]
-            del argv[index]
-        if '--debug-config' in sys.argv:
-            index = sys.argv.index('--debug-config')
-            EnvSettingsBase.verbose = True
-            del argv[index]
-
-    @classmethod
-    def load(cls, globalsobj=None):
-        """
-        helper method to load from settings.py as simple as
-        StackableSettings.load()
-        """
-        cls.set_defaults()
-        if len(sys.argv) > 1 and sys.argv[1] == 'test':
-            config = os.environ['DJANGO_CONFIGURATION_TEST']
-        else:
-            config = os.environ['DJANGO_CONFIGURATION']
-        globalsobj = globalsobj or sys._getframe(1).f_globals
-        EnvSettingsBase.setup(globalsobj, env_class=config)
-
-    @classmethod
-    def root_path(cls, filename=None):
-        """
-        this returns the parent directory of the top-level module of the
-        configuration class, which is assumed to be in the actual root
-        of the project 
-        """
-        if filename is None:
-            filename = sys._getframe(1).f_globals.get('__file__')
-        cur_dir = os.path.dirname(filename)
-        return os.path.abspath(os.path.join(cur_dir, os.pardir))
+    if all((v not in os.environ)
+           for v in (StackableSettings.CONFIG_VAR, StackableSettings.CONFIG_TEST_VAR)):
+        CONFIG_VAR = 'DJANGO_CONFIGURATION'
+        CONFIG_TEST_VAR = 'DJANGO_CONFIGURATION_TEST'
 
     @classmethod
     def get_wsgi_application(cls):
         # parse_options must run *before* django's get_wsgi_appliction
         # in order to properly initialize StackableSettings
-        StackableSettings.parse_options()
+        cls.parse_options()
         from django.core.wsgi import get_wsgi_application
         return get_wsgi_application()
 
+
+# auto load DjangoStackableSettings if Django is installed  -- backwards compatibility
+try:
+    import django
+except:
+    pass
+else:
+    StackableSettings = DjangoStackableSettings
+
+# check for use of old configuration variable
+test_configvar = DjangoStackableSettings.CONFIG_VAR
+use_configvar = StackableSettings.CONFIG_VAR
+if test_configvar in os.environ:
+    warnings.warn('Use of {test_configvar} is deprecated. Use {use_configvar} instead.',
+                  category=DeprecationWarning)
 
 class BadConfiguration(BaseException):
     pass

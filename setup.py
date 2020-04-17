@@ -1,4 +1,5 @@
 import os
+
 from setuptools import setup, find_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.md')).read()
@@ -12,7 +13,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     license='MIT',  # example license
-    description='stackable settings for Django',
+    description='stackable settings for any Python and Django application',
     long_description=README,
     author='miraculixx',
     author_email='miraculixx@gmx.ch',
