@@ -533,12 +533,13 @@ class StackableSettings(EnvSettingsBase):
 
     @classmethod
     def is_test_run(cls):
-        return any(('test' in argv) for argv in sys.argv)
+        # only first two arguments are considered
+        return any(('test' in argv) for argv in sys.argv[:2])
 
     @classmethod
     def should_debug(cls, clean_args=True):
         in_argv = '--debug-config' in sys.argv
-        in_env = os.environ.get('DEBUG_APP_CONFIG')
+        in_env = os.environ.get('APP_CONFIG_DEBUG')
         should = in_argv or in_env
         if clean_args and in_argv:
             index = sys.argv.index('--debug-config')
@@ -595,7 +596,7 @@ class DjangoStackableSettings(StackableSettings):
            # properly initialized.
            # from django.core.wsgi import get_wsgi_application() <<< remove!
            import os
-           from shrutil.config_base import StackableSettings
+           from stackable import StackableSettings
            os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
            application = StackableSettings.get_wsgi_application()
 
@@ -647,24 +648,21 @@ class DjangoStackableSettings(StackableSettings):
         return get_wsgi_application()
 
 
-# auto load DjangoStackableSettings if Django is installed  -- backwards compatibility
-try:
-    import django
-except:
+class BadConfiguration(BaseException):
     pass
-else:
-    StackableSettings = DjangoStackableSettings
 
 # check for use of old configuration variable
 test_configvar = DjangoStackableSettings.CONFIG_VAR
 use_configvar = StackableSettings.CONFIG_VAR
-if test_configvar in os.environ:
-    warnings.warn('Use of {test_configvar} is deprecated. Use {use_configvar} instead.',
-                  category=DeprecationWarning)
+if test_configvar != use_configvar and test_configvar in os.environ:
+    warnings.warn('Use of {test_configvar} is deprecated. Use {use_configvar} instead.'.format(**locals()))
 
-class BadConfiguration(BaseException):
-    pass
-
+# auto load DjangoStackableSettings if Django is installed  -- backwards compatibility
+# -- we don't try to import django because this will mess with settings before we had a chance to
+import six
+django_path = os.path.join(os.path.dirname(six.__file__), 'django')
+if os.path.exists(django_path):
+    StackableSettings = DjangoStackableSettings
 
 def make_tuple(input):
     """
