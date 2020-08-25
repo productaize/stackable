@@ -12,6 +12,7 @@ setup(
     name='stackable',
     version=VERSION,
     packages=find_packages(),
+    url='https://github.com/productaize/stackable',
     include_package_data=True,
     license='MIT',  # example license
     description='stackable settings for any Python and Django application',
