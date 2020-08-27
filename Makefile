@@ -25,5 +25,5 @@ release-prod: test dist
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
 	twine upload --repository pypi dist/*
-	pip install --force-reinstall -U stackable==$PIPVERSION
+	pip install --force-reinstall -U stackable==${PIPVERSION}
 	pip install -e .
