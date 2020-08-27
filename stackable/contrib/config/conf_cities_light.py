@@ -7,6 +7,7 @@ from stackable.stackable import EnvSettingsBase
 
 
 class Config_Cities_Light(object):
+    # see https://github.com/jazzband/django-cities-light
     apps_append = (
         'cities_light',
     )
@@ -14,4 +15,5 @@ class Config_Cities_Light(object):
         EnvSettingsBase.patch_apps(apps_append),
     )
 
+    CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
     CITIES_LIGHT_INCLUDE_COUNTRIES = ['CH']

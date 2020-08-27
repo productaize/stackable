@@ -1,6 +1,8 @@
 from stackable.stackable import EnvSettingsBase
+
+
 def setup_postoffice(globals, *args):
-    """ this runs post any other email settings, 
+    """ this runs post any other email settings,
     so we can safely reconfigure post office to
     match whatever other email backend was set """
     # get post office config
@@ -14,7 +16,6 @@ def setup_postoffice(globals, *args):
 
 
 class Config_DjangoPostOffice(object):
-
     """
     set up django-post-office
     @see https://github.com/miraculixx/django-post_office
@@ -38,11 +39,11 @@ class Config_DjangoPostOffice(object):
         'SENDING_ORDER': ['created'],
         # specify serializer for context variables for deferred rendering
         # (render_on_delivery=True)
-        #'CONTEXT_FIELD_CLASS': 'picklefield.fields.PickledObjectField',
+        # 'CONTEXT_FIELD_CLASS': 'picklefield.fields.PickledObjectField',
 
     }
     __patches__ = (
         EnvSettingsBase.patch_apps(_apps_),
-        #EnvSettingsBase.patch_dict('CACHES', _caches_),
+        # EnvSettingsBase.patch_dict('CACHES', _caches_),
         EnvSettingsBase.patch(setup_postoffice),
     )
