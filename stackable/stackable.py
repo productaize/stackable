@@ -310,7 +310,7 @@ class EnvSettingsBase(object):
         convenience function to patch the middleware classes
         """
         addl = make_tuple(addl)
-        return cls.patch_list('MIDDLEWARE_CLASSES', addl, prepend=prepend,
+        return cls.patch_list('MIDDLEWARE', addl, prepend=prepend,
                               remove=remove, at=at)
 
     @classmethod

@@ -13,8 +13,8 @@ class Config_DjangoSekizai(object):
     )
 
     _ctxp_append = (
-        'django.core.context_processors.media',
-        'django.core.context_processors.static',
+        'django.template.context_processors.media',
+        'django.template.context_processors.static',
         'sekizai.context_processors.sekizai',
     )
 
