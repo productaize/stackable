@@ -38,12 +38,12 @@ class AESCipher:
         plaintext = _u8(plaintext)
         cipher = pyaes.AESModeOfOperationCTR(self.key)
         ciphertext = cipher.encrypt(plaintext)
-        return _u(base64.encodestring(ciphertext))
+        return _u(base64.encodebytes(ciphertext))
 
     def decrypt(self, ciphertext):
         ciphertext = _u8(ciphertext)
         cipher = pyaes.AESModeOfOperationCTR(self.key)
-        cleartext = cipher.decrypt(base64.decodestring(ciphertext))
+        cleartext = cipher.decrypt(base64.decodebytes(ciphertext))
         return _u(cleartext)
 
     def _pad(self, s):
