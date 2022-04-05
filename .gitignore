@@ -111,3 +111,5 @@ venv.bak/
 /.idea/workspace.xml
 /.project
 /.pydevproject
+/.idea/.gitignore
+/.idea/vcs.xml

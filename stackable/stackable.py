@@ -59,9 +59,10 @@ class EnvSettingsBase(object):
 
     @classmethod
     def setup(cls, globalsobj, env_class=None, config_mod=None,
-              silent=False, use_lowercase=False):
+              verbose=False, use_lowercase=False):
         config_mod = config_mod or ("config",)
         cls.password, cls.aes = password()
+        cls.verbose = verbose
         if isinstance(env_class, string_types):
             if '.' in env_class:
                 config_mod = env_class.split('.')[:-1]
@@ -121,6 +122,12 @@ class EnvSettingsBase(object):
     @classmethod
     def info(cls, text):
         logger.info(text)
+        if cls.verbose:
+            print(text)
+
+    @classmethod
+    def debug(cls, text):
+        logger.debug(text)
         if cls.verbose:
             print(text)
 
@@ -233,7 +240,9 @@ class EnvSettingsBase(object):
                 cls._config_modules.append(base_cls.__module__)
                 for var in base_cls.__dict__:
                     if use_lowercase or isuppercase(var):
-                        logger.debug("Setting %s from %s" % (var, base_cls))
+                        cls.debug("Setting %s from %s" % (var, base_cls))
+                        if var in globalsobj:
+                           cls.debug("Setting %s from %s was already defined" % (var, base_cls))
                         globalsobj[var] = base_cls.__dict__[var]
                 # register patches
                 patches = base_cls.__dict__.get('__patches__', ())
@@ -556,7 +565,9 @@ class StackableSettings(EnvSettingsBase):
         envcls = cls.ENV_LOCAL_TEST if cls.is_test_run() else cls.ENV_LOCAL
         config = os.environ.get(conf_var, envcls)
         globalsobj = globalsobj or sys._getframe(1).f_globals
-        EnvSettingsBase.setup(globalsobj, env_class=config, config_mod=config_mod)
+        EnvSettingsBase.setup(globalsobj, env_class=config, config_mod=config_mod,
+                              verbose=cls.should_debug())
+
 
     @classmethod
     def root_path(cls, filename=None):

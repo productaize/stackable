@@ -1,5 +1,3 @@
-from __builtin__ import False
-
 from stackable.stackable import StackableSettings
 
 

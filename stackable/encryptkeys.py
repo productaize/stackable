@@ -34,7 +34,7 @@ def siteenv(site=None, envclass='EnvSettings_Local', api_password=None,
     api_password = os.environ.get('ENV_APIKEY_DECRYPT') or "%s" % uuid4()
     with _open(keysfile, 'r') as f:
         # load cleartext keys and config settings from yml file
-        keys = yaml.load(f)
+        keys = yaml.safe_load(f)
         e_settings = keys.get(envclass, None)
         if e_settings is None:
             print("[WARN] Cannot find any keys for %s" % envclass)
