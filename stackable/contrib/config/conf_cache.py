@@ -1,10 +1,9 @@
 from django.db.models.signals import post_migrate
 from django.dispatch.dispatcher import receiver
-from six import iteritems
 from stackable.stackable import StackableSettings
 def create_cache_table(table_name):
     """
-    safely create the cache table 
+    safely create the cache table
     """
     from django.db import connection
     cursor = connection.cursor()
@@ -30,7 +29,7 @@ def setup_cache_table(settings, *args, **kwargs):
     """
     CACHES = settings.get('CACHES')
     # create all cache tables
-    for name, config in iteritems(CACHES):
+    for name, config in CACHES.items():
         if 'db.DatabaseCache' in config.get('BACKEND', ''):
             table_name = config['LOCATION']
             create_cache_table(table_name)

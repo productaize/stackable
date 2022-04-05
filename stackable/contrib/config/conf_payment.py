@@ -1,6 +1,5 @@
 import os
 
-from six import iteritems
 from stackable.stackable import StackableSettings
 
 
@@ -10,7 +9,7 @@ def setup_payment_variants(settings, *args, **kwargs):
     for processor, var in variants.values():
         # e.g. { 'default': ('processor', { ... }) }
         # => var is the dict
-        for k, v in iteritems(var):
+        for k, v in var.items():
             # e.g. var = { 'client_id' : 'PAYPAL_CLIENT_ID' }
             # => v = PAYPAL_CLIENT_ID
             # => set { 'client-id' : settings.PAYPAL_CLIENT_ID }
