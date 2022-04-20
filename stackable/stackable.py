@@ -668,7 +668,7 @@ if test_configvar != use_configvar and test_configvar in os.environ:
     warnings.warn('Use of {test_configvar} is deprecated. Use {use_configvar} instead.'.format(**locals()))
 
 # auto load DjangoStackableSettings if Django is installed  -- backwards compatibility
-# -- we don't try to import django because this will mess with settings before we had a chance to
+# -- we don't try to import django because this will mess with settings before we had a chance to load
 django_path = os.path.join(os.path.dirname(__file__), 'django')
 if os.path.exists(django_path):
     StackableSettings = DjangoStackableSettings
