@@ -222,7 +222,7 @@ class EnvSettingsBase(object):
                 settings_cls = getattr(mod, env_class)
             except BaseException as e:
                 cls.fail('[ERROR] Trying to load %s (%s), Exception was: %s' %
-                         (env_class, mod, e))
+                         (env_class, mod, repr(e)))
                 if '--traceback' in sys.argv:
                     from traceback import print_exc
                     print_exc()
