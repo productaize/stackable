@@ -1,11 +1,13 @@
 from __future__ import print_function
+
+from io import StringIO
+
 import argparse
 from contextlib import contextmanager
 import json
 import os
 from uuid import uuid4
 
-from six import StringIO
 import yaml
 
 from .crypto import AESCipher

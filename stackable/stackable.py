@@ -12,7 +12,6 @@ import warnings
 from importlib import import_module
 
 from ordered_set import OrderedSet
-from six import string_types, iteritems
 
 from .crypto import AESCipher
 
@@ -63,7 +62,7 @@ class EnvSettingsBase(object):
         config_mod = config_mod or ("config",)
         cls.password, cls.aes = password()
         cls.verbose = verbose
-        if isinstance(env_class, string_types):
+        if isinstance(env_class, str):
             if '.' in env_class:
                 config_mod = env_class.split('.')[:-1]
                 env_class = env_class.split('.')[-1]
@@ -155,7 +154,7 @@ class EnvSettingsBase(object):
         """
         cls._allow_keys_patch = keys.pop('ALLOW_KEYS_PATCH',
                                          cls._allow_keys_patch)
-        if isinstance(cls._allow_keys_patch, string_types):
+        if isinstance(cls._allow_keys_patch, str):
             cls._allow_keys_patch = cls._allow_keys_patch.split(',')
         if isinstance(keys, dict):
             globalsobj.update(keys)
@@ -215,7 +214,7 @@ class EnvSettingsBase(object):
         settings parameters in the globals object.
         """
         mod = None
-        if isinstance(env_class, string_types):
+        if isinstance(env_class, str):
             try:
                 logger.debug("Trying to load %s from %s" %
                              (env_class, config_mod))
@@ -223,7 +222,7 @@ class EnvSettingsBase(object):
                 settings_cls = getattr(mod, env_class)
             except BaseException as e:
                 cls.fail('[ERROR] Trying to load %s (%s), Exception was: %s' %
-                         (env_class, mod, e))
+                         (env_class, mod, repr(e)))
                 if '--traceback' in sys.argv:
                     from traceback import print_exc
                     print_exc()
@@ -360,7 +359,7 @@ class EnvSettingsBase(object):
     def report(cls, globalsobj, keys=None):
         keys = make_tuple(keys)
         print('-- SETTINGS as seen by EnvSettingsBase --\n')
-        for k, v in iteritems(globalsobj):
+        for k, v in globalsobj.items():
             if not keys or k in keys:
                 print("%s=%s\n" % (k, v))
 
@@ -669,9 +668,8 @@ if test_configvar != use_configvar and test_configvar in os.environ:
     warnings.warn('Use of {test_configvar} is deprecated. Use {use_configvar} instead.'.format(**locals()))
 
 # auto load DjangoStackableSettings if Django is installed  -- backwards compatibility
-# -- we don't try to import django because this will mess with settings before we had a chance to
-import six
-django_path = os.path.join(os.path.dirname(six.__file__), 'django')
+# -- we don't try to import django because this will mess with settings before we had a chance to load
+django_path = os.path.join(os.path.dirname(__file__), 'django')
 if os.path.exists(django_path):
     StackableSettings = DjangoStackableSettings
 

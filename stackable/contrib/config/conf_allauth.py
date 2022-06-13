@@ -3,7 +3,6 @@ Created on Dec 19, 2014
 
 @author: patrick
 '''
-import six
 from stackable.stackable import EnvSettingsBase
 ALLAUTH_PROVIDERS = {
     'twitter': 'allauth.socialaccount.providers.twitter',
@@ -33,7 +32,7 @@ def conditional_accounts(settings, *args, **kwargs):
     apps = list(settings['INSTALLED_APPS'])
     social_apps = settings.get('SOCIAL_ACCOUNTS_ENABLED', [])
     providers = settings.get('ALLAUTH_PROVIDERS', ALLAUTH_PROVIDERS)
-    if isinstance(social_apps, six.string_types):
+    if isinstance(social_apps, str):
         social_apps = social_apps.split(',')
     for app in social_apps:
         apps.append(providers[app])

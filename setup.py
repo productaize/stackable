@@ -37,7 +37,6 @@ setup(
         'pyyaml>3.11',
         'ordered_set',
         'pyaes',
-        'six',
     ],
     dependency_links=[
     ]

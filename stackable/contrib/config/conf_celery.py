@@ -8,7 +8,7 @@ class Config_Celery(object):
     """
     CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
     BROKER_URL = 'amqp://guest@127.0.0.1:5672//'
-    CELERY_RESULT_BACKEND = 'amqp'
+    CELERY_RESULT_BACKEND = 'rpc://'
 
     _apps_ = ('djcelery',)
 

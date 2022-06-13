@@ -1,7 +1,8 @@
+from io import StringIO
+
 import os
 from unittest.case import TestCase
 
-from six import StringIO
 
 from stackable import stackable
 from stackable.contrib.config.conf_api import Config_ApiKeys
