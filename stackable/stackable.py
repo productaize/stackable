@@ -547,7 +547,7 @@ class StackableSettings(EnvSettingsBase):
     @classmethod
     def should_debug(cls, clean_args=True):
         in_argv = '--debug-config' in sys.argv
-        in_env = os.environ.get('APP_CONFIG_DEBUG')
+        in_env = os.environ.get('APP_CONFIG_DEBUG', '0') in ('1', 'yes', 'true')
         should = in_argv or in_env
         if clean_args and in_argv:
             index = sys.argv.index('--debug-config')

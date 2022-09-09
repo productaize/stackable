@@ -14,7 +14,8 @@ def patch_db(globals):
 
 
 class Config_Dokku(object):
-    StackableSettings.patch(patch_db)
+    # replaced by Config_DatabaseUrl
+    # StackableSettings.patch(patch_db)
     TMP_FOLDER = '/tmp'
     # for compatibility with both dokku version 0.3.x and 0.4.x
     if not os.environ.get('RABBITMQ_URL'):
