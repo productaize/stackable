@@ -66,7 +66,7 @@ class EnvSettingsBase(object):
             if '.' in env_class:
                 config_mod = env_class.split('.')[:-1]
                 env_class = env_class.split('.')[-1]
-        cls.info("[INFO] Loading configuration %s using %s" %
+        cls.info("Loading configuration %s using %s" %
                  (env_class, config_mod))
         # make sure we have tuples as input
         env_class = make_tuple(env_class)
@@ -114,38 +114,30 @@ class EnvSettingsBase(object):
                                               patch_input, keyspatch=True)
         else:
             if globalsobj.get('API_KEYS', True):
-                cls.info(
-                    ("[WARN] KEYS are not loaded -- ENV_APIKEY_DECRYPT "
+                cls.warn(
+                    ("KEYS are not loaded -- ENV_APIKEY_DECRYPT "
                      " is not set or empty"))
 
     @classmethod
     def info(cls, text):
         logger.info(text)
-        if cls.verbose:
-            print(text)
 
     @classmethod
     def debug(cls, text):
         logger.debug(text)
-        if cls.verbose:
-            print(text)
 
     @classmethod
     def warn(cls, text):
         logger.warn(text)
-        if cls.verbose:
-            print(text)
 
     @classmethod
     def error(cls, text):
         logger.error(text)
-        if cls.verbose:
-            print(text)
 
     @classmethod
     def fail(cls, text):
         # get the root logger and print the message as this fails with exit(1)
-        print(text)
+        cls.error(text)
 
     @classmethod
     def apply_keys(cls, globalsobj, keys):
@@ -249,7 +241,7 @@ class EnvSettingsBase(object):
                     globalsobj['SETTINGS_PATCHES_APPLIED'].append(patch)
         dups = cls.check_duplicate_apps(globalsobj)
         if dups:
-            print("[WARNING] Duplicates %s in INSTALLED_APPS" % dups)
+            cls.warn("Duplicates %s in INSTALLED_APPS" % dups)
 
     @classmethod
     def patches_from_applied_configs(cls, globalsobj):
@@ -358,10 +350,10 @@ class EnvSettingsBase(object):
     @classmethod
     def report(cls, globalsobj, keys=None):
         keys = make_tuple(keys)
-        print('-- SETTINGS as seen by EnvSettingsBase --\n')
+        cls.info('-- SETTINGS as seen by EnvSettingsBase --\n')
         for k, v in globalsobj.items():
             if not keys or k in keys:
-                print("%s=%s\n" % (k, v))
+                cls.info("%s=%s\n" % (k, v))
 
     @classmethod
     def patch_do_func(cls, globalsobj, func, args, keyspatch=False):
@@ -444,7 +436,7 @@ class EnvSettingsBase(object):
         if list_name == 'INSTALLED_APPS':
             # check for duplicates
             if cls.check_duplicate_apps(globalsobj):
-                print("WARNING: %s is duplicate in INSTALLED_APPS "
+                cls.warn("WARNING: %s is duplicate in INSTALLED_APPS "
                       " (in patch_apps %s prepend=%s remove=%s at=%s)" %
                       (list_patch, prepend, remove))
 
