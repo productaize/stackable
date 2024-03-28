@@ -28,6 +28,7 @@ def conditional_accounts(settings, *args, **kwargs):
 
     # urls.py
     urlpatterns += [url(r'^accounts/', include('allauth.urls'))]
+
     """
     apps = list(settings['INSTALLED_APPS'])
     social_apps = settings.get('SOCIAL_ACCOUNTS_ENABLED', [])
@@ -40,6 +41,10 @@ def conditional_accounts(settings, *args, **kwargs):
 
 
 class Config_DjangoAllAuth(object):
+    """
+    See Also:
+        https://docs.allauth.org/en/latest/installation/quickstart.html
+    """
     allauth_apps_append = (
         'django.contrib.sites',
         'allauth',
@@ -54,6 +59,10 @@ class Config_DjangoAllAuth(object):
         'account': 'ignore',
     }
 
+    allauth_mw_append = (
+        'allauth.account.middleware.AccountMiddleware',
+    )
+
     __patches__ = (
         EnvSettingsBase.patch_apps(allauth_apps_append),
         EnvSettingsBase.patch_list(
@@ -62,6 +71,7 @@ class Config_DjangoAllAuth(object):
             'SOUTH_MIGRATION_MODULES', allauth_south_migration),
         EnvSettingsBase.patch(
             conditional_accounts),
+        EnvSettingsBase.patch_list('MIDDLEWARE', allauth_mw_append),
     )
     ACCOUNT_AUTHENTICATION_METHOD = 'email'
     ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 5
@@ -71,3 +81,5 @@ class Config_DjangoAllAuth(object):
     ACCOUNT_USERNAME_REQUIRED = False
     ACCOUNT_SIGNUP_PASSWORD_VERIFICATION = False
     SOCIALACCOUNT_QUERY_EMAIL = True
+
+

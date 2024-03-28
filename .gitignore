@@ -113,3 +113,4 @@ venv.bak/
 /.pydevproject
 /.idea/.gitignore
 /.idea/vcs.xml
+stackable/contrib/staticfiles
