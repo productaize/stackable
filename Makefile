@@ -16,7 +16,7 @@ release-test: dist
 	: "twine upload to pypi test"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
-	twine upload --repository testpypi dist/*
+	twine upload --repository testpypi-productaize dist/*
 	pip install -U --index-url https://test.pypi.org/simple/ stackable
 	pip install -e .
 
@@ -24,6 +24,6 @@ release-prod: test dist
 	: "twine upload to pypi prod"
 	# see https://packaging.python.org/tutorials/packaging-projects/
 	# config is in $HOME/.pypirc
-	twine upload --repository pypi dist/*
+	twine upload --repository pypi-productaize dist/*
 	pip install --force-reinstall -U stackable==${PIPVERSION}
 	pip install -e .

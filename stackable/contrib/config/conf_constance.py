@@ -3,8 +3,7 @@ from stackable.stackable import StackableSettings
 
 class Config_DjangoConstance(object):
     # https://django-constance.readthedocs.io/en/latest/index.html#
-    _add_apps = ('constance',
-                 'constance.backends.database',)
+    _add_apps = ('constance',)
 
     CONSTANCE_CONFIG = {
         'THE_ANSWER': (42, 'Answer to the Ultimate Question of Life, '
