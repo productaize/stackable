@@ -3,14 +3,14 @@
 """
 from __future__ import print_function
 
+from importlib import import_module
+
 import inspect
 import json
 import logging
 import os
 import sys
 import warnings
-from importlib import import_module
-
 from ordered_set import OrderedSet
 
 from .crypto import AESCipher
@@ -128,7 +128,7 @@ class EnvSettingsBase(object):
 
     @classmethod
     def warn(cls, text):
-        logger.warn(text)
+        logger.warning(text)
 
     @classmethod
     def error(cls, text):
@@ -233,7 +233,7 @@ class EnvSettingsBase(object):
                     if use_lowercase or isuppercase(var):
                         cls.debug("Setting %s from %s" % (var, base_cls))
                         if var in globalsobj:
-                           cls.debug("Setting %s from %s was already defined" % (var, base_cls))
+                            cls.debug("Setting %s from %s was already defined" % (var, base_cls))
                         globalsobj[var] = base_cls.__dict__[var]
                 # register patches
                 patches = base_cls.__dict__.get('__patches__', ())
@@ -437,8 +437,8 @@ class EnvSettingsBase(object):
             # check for duplicates
             if cls.check_duplicate_apps(globalsobj):
                 cls.warn("WARNING: %s is duplicate in INSTALLED_APPS "
-                      " (in patch_apps %s prepend=%s remove=%s at=%s)" %
-                      (list_patch, prepend, remove))
+                         " (in patch_apps %s prepend=%s remove=%s at=%s)" %
+                         (list_patch, prepend, remove))
 
     @classmethod
     def patch_do_dict(cls, globalsobj, dict_name, dict_patch, remove=False):
@@ -559,7 +559,6 @@ class StackableSettings(EnvSettingsBase):
         EnvSettingsBase.setup(globalsobj, env_class=config, config_mod=config_mod,
                               verbose=cls.should_debug())
 
-
     @classmethod
     def root_path(cls, filename=None):
         """
@@ -574,7 +573,7 @@ class StackableSettings(EnvSettingsBase):
 
 
 class DjangoStackableSettings(StackableSettings):
-    """
+    r"""
     This is the StackableSettings loader for Django. Use as shown below.
 
     Usage:
@@ -653,6 +652,7 @@ class DjangoStackableSettings(StackableSettings):
 class BadConfiguration(BaseException):
     pass
 
+
 # check for use of old configuration variable
 test_configvar = DjangoStackableSettings.CONFIG_VAR
 use_configvar = StackableSettings.CONFIG_VAR
@@ -664,6 +664,7 @@ if test_configvar != use_configvar and test_configvar in os.environ:
 django_path = os.path.join(os.path.dirname(__file__), 'django')
 if os.path.exists(django_path):
     StackableSettings = DjangoStackableSettings
+
 
 def make_tuple(input):
     """

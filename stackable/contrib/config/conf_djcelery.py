@@ -5,7 +5,7 @@ from stackable.stackable import EnvSettingsBase
 
 
 def concurrency():
-    return multiprocessing.cpu_count()
+    return max(multiprocessing.cpu_count(), 4)
 
 
 def patch_logging(_globals, _logging_):

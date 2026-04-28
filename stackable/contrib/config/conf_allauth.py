@@ -4,6 +4,7 @@ Created on Dec 19, 2014
 @author: patrick
 '''
 from stackable.stackable import EnvSettingsBase
+
 ALLAUTH_PROVIDERS = {
     'twitter': 'allauth.socialaccount.providers.twitter',
     'google': 'allauth.socialaccount.providers.google',
@@ -28,6 +29,7 @@ def conditional_accounts(settings, *args, **kwargs):
 
     # urls.py
     urlpatterns += [url(r'^accounts/', include('allauth.urls'))]
+
     """
     apps = list(settings['INSTALLED_APPS'])
     social_apps = settings.get('SOCIAL_ACCOUNTS_ENABLED', [])
@@ -40,11 +42,16 @@ def conditional_accounts(settings, *args, **kwargs):
 
 
 class Config_DjangoAllAuth(object):
+    """
+    See Also:
+        https://docs.allauth.org/en/latest/installation/quickstart.html
+    """
     allauth_apps_append = (
         'django.contrib.sites',
         'allauth',
         'allauth.account',
         'allauth.socialaccount',
+        'allauth.socialaccount.providers.openid_connect',
     )
     allauth_ab_append = (
         'allauth.account.auth_backends.AuthenticationBackend',
@@ -54,6 +61,10 @@ class Config_DjangoAllAuth(object):
         'account': 'ignore',
     }
 
+    allauth_mw_append = (
+        'allauth.account.middleware.AccountMiddleware',
+    )
+
     __patches__ = (
         EnvSettingsBase.patch_apps(allauth_apps_append),
         EnvSettingsBase.patch_list(
@@ -62,6 +73,7 @@ class Config_DjangoAllAuth(object):
             'SOUTH_MIGRATION_MODULES', allauth_south_migration),
         EnvSettingsBase.patch(
             conditional_accounts),
+        EnvSettingsBase.patch_list('MIDDLEWARE', allauth_mw_append),
     )
     ACCOUNT_AUTHENTICATION_METHOD = 'email'
     ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 5
@@ -71,3 +83,13 @@ class Config_DjangoAllAuth(object):
     ACCOUNT_USERNAME_REQUIRED = False
     ACCOUNT_SIGNUP_PASSWORD_VERIFICATION = False
     SOCIALACCOUNT_QUERY_EMAIL = True
+
+    # since 65.4.0
+    """
+    WARNINGS:
+    ?: settings.ACCOUNT_AUTHENTICATION_METHOD is deprecated, use: settings.ACCOUNT_LOGIN_METHODS = {'email'}
+    ?: settings.ACCOUNT_EMAIL_REQUIRED is deprecated, use: settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
+    ?: settings.ACCOUNT_USERNAME_REQUIRED is deprecated, use: settings.ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
+    """
+    # ACCOUNT_LOGIN_METHODS = {'email'}
+    # ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
